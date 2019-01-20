@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="css/main.css" />
+    <!-- Font awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <!-- Vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+    <!-- Axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- Materialize -->
+    <!-- Compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <title>Naturreservatsbanken - Admininstratörvy</title>
+  </head>
+  <body>
+
+    <!-- Container -->
+    <div class="container">
+
+        <!-- Header -->
+        <header>
+          <h1><i class="fab fa-pagelines teal-text text-lighten-2"></i> Naturreservatsbanken</h1>
+        </header>
+
+        <!-- Vue app -->
+        <div id="app">
+
+          <div class="row">
+            
+            <button v-show="showForm == false" v-on:click="showForm = true" class="btn">Lägg till naturreservat</button>
+            <button v-show="showForm == true" v-on:click="showForm = false" class="btn">Dölj formulär</button>
+
+            <!-- Form for submitting a new nature reserve-->
+            <form v-show="showForm == true" class="col s12">
+              
+              <h2>Lägg till nytt Naturreservat</h2>
+
+              <!-- Input -->
+              <label>Namn</label>
+              <input type="text" v-model="NatureRes.nrName" required="">
+              <label>Storlek i hektar</label>
+              <input type="number" min="0" v-model="NatureRes.nrSize" required="">
+              <label>Skyddsår</label>
+              <input type="number" min="1900" v-model="NatureRes.nrYear" required="">
+              <label>Kommun</label>
+              <input type="text" v-model="NatureRes.nrRegion" required="">
+              <label>Förvaltare</label>
+              <input type="text" v-model="NatureRes.nrTrustee" required="">
+              <label>Markägare</label>
+              <input type="text" v-model="NatureRes.nrPlotOwner" required="">
+              <label>Länk till beslut <span class="non-mandatory">- Ej obligatorisk</span></label>
+              <input type="text" v-model="NatureRes.nrDecisionLink">
+              <label>Länk till skötselplan <span class="non-mandatory">- Ej obligatorisk</span></label>
+              <input type="text" v-model="NatureRes.nrManagementLink">
+              <label>Beskrivning</label>
+              <textarea class="materialize-textarea" v-model="NatureRes.nrDescription" required=""></textarea>
+              <button class="btn" v-on:click="postNr">Lägg till</button>
+
+            </form>
+
+            <!-- Section where nature reserves are listed -->
+            <section id="nr-listing" class="col s12">
+
+              <!-- Search-->
+              <label>Sök på namn:</label>
+              <input type="text" v-model="search">
+
+                <!-- Nature reserves-->
+                <div v-if="nrs && nrs.length">
+                <article v-for="nr of filteredNrs">
+
+                  <div v-if="editNrs === nr._id">
+
+                    <form>
+
+                    <h3>Redigera {{ nr.nrName }} </h3>
+
+                      <!-- Input -->
+                      <label>Namn</label>
+                      <input type="text" v-model="nr.nrName" required="" aria-required="true">
+                      <label>Storlek i hektar</label>
+                      <input type="number" min="0" v-model="nr.nrSize" required="" aria-required="true">
+                      <label>Skyddsår</label>
+                      <input type="text" v-model="nr.nrYear" required="" aria-required="true">
+                      <label>Kommun</label>
+                      <input type="text" v-model="nr.nrRegion" required="" aria-required="true">
+                      <label>Förvaltare</label>
+                      <input type="text" v-model="nr.nrTrustee" required="" aria-required="true">
+                      <label>Markägare</label>
+                      <input type="text" v-model="nr.nrPlotOwner" required="" aria-required="true">
+                      <label>Länk till beslut <span class="non-mandatory">- Ej obligatorisk</span></label>
+                      <input type="text" v-model="nr.nrDecisionLink">
+                      <label>Länk till skötselplan <span class="non-mandatory">- Ej obligatorisk</span></label>
+                      <input type="text" v-model="nr.nrManagementLink">
+                      <label>Beskrivning</label>
+                      <textarea class="materialize-textarea" v-model="nr.nrDescription" required="" aria-required="true"></textarea>
+                      <button class="btn" v-on:click="updateNr(nr)">Uppdatera reservat</button>
+
+                    </form>
+
+                  </div>
+
+                  <div v-else>
+                    <h3>{{ nr.nrName }}</h3>
+                    <p>{{ nr.nrDescription }}</p>
+
+                  <div class="fact-box grey lighten-3">
+                      <h4>Fakta</h4>
+                      <ul>
+                        <li><b>Storlek</b>: {{ nr.nrSize }} hektar</li>
+                        <li><b>Skyddsår</b>: {{ nr.nrYear}} </li>
+                        <li><b>Kommun</b>: {{ nr.nrRegion }} </li>
+                        <li><b>Förvaltare</b>: {{ nr.nrTrustee }}</li>
+                        <li><b>Markägare</b>: {{ nr.nrPlotOwner }}</li>
+                      </ul>
+                    </div>
+                    <div v-show="nr.nrDecisionLink || nr.nrManagementLink" class="fact-box grey lighten-3">
+                        <h4>Mer information</h4>
+                        <ul>
+                          <li v-show="nr.nrDecisionLink"><a v-bind:href="nr.nrDecisionLink"><i class="fas fa-link"></i> Länk till beslut för {{ nr.nrName }}</a></li>
+                          <li v-show="nr.nrManagementLink"><a v-bind:href="nr.nrManagementLink"><i class="fas fa-link"></i> Länk till skötselplan för {{ nr.nrName }}</a></li>
+                        </ul>
+                    </div>
+
+                  <button class="btn red" v-on:click="removeNr(nr._id)">Ta bort Naturreservat</button>
+                  <button class="btn orange" v-on:click="editNrs = nr._id">Redigera Naturreservat</button>
+                  </div>
+
+                </article>
+              </div>
+
+              <div v-else>
+                <p>Inga naturreservat att visa.</p>
+              </div>
+
+            </section>
+          </div>
+        </div>
+    </div>
+
+    <!-- Main footer -->
+    <footer class="teal lighten-2"></footer>
+
+    <script src="js/main.js"></script>
+  </body>
+</html>
